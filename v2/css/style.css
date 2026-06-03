@@ -206,20 +206,7 @@ html, body {
 .mode-lvl { font-size:11px; font-weight:700; color:rgba(255,255,255,.78); margin-top:2px; }
 .mode-arrow { font-size:18px; color:rgba(255,255,255,.8); }
 
-/* Reset button — position:fixed outside #app, z-index above EVERYTHING.
-   This is the only way to escape .page stacking contexts (z:50) vs #nav-bar (z:60).
-   Hidden by default, shown by JS when home page is active. */
-.home-reset { position:fixed; bottom:100px; right:14px; z-index:9999;
-  width:42px; height:42px; border-radius:50%;
-  background:rgba(255,255,255,.8); color:rgba(0,0,0,.35); font-size:18px;
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; border:1.5px solid rgba(0,0,0,.08);
-  box-shadow:0 2px 8px rgba(0,0,0,.08);
-  transition:all .2s; touch-action:manipulation;
-  display:none; }
-.home-reset.show { display:flex; }
-.home-reset:hover { background:rgba(255,255,255,.95); transform:scale(1.08); }
-.home-reset:active { transform:scale(.9); background:rgba(0,0,0,.1); }
+
 
 /* ===== GAME PAGE ===== */
 #game-page { padding-bottom:calc(70px + env(safe-area-inset-bottom,0)); }

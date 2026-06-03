@@ -1280,8 +1280,8 @@ function navTo(page) {
   const navBtn = document.querySelector(`[data-page="${page}"]`);
   if (navBtn) navBtn.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-  if (page === 'home') { $('home-page').classList.remove('hidden'); updateHome(); showResetBtn(); }
-  else { hideResetBtn(); if (page === 'coll') { $('coll-page').classList.remove('hidden'); renderCollection(); }
+  if (page === 'home') { $('home-page').classList.remove('hidden'); updateHome(); }
+  else { if (page === 'coll') { $('coll-page').classList.remove('hidden'); renderCollection(); }
   else if (page === 'achv') { $('achv-page').classList.remove('hidden'); renderAchievements(); $('achv-dot').classList.remove('show'); } }
 }
 
@@ -1292,7 +1292,6 @@ function startGame(mode) {
   $('g-title').textContent = titles[mode];
   $('home-page').classList.add('hidden');
   $('game-page').classList.remove('hidden');
-  hideResetBtn();
   if (!S.tutorialDone.classic && !S.tutorialDone.steps) loadTutorial(); else loadLevel(S.lv);
 }
 
@@ -1304,7 +1303,6 @@ function backToMenu() {
   $('game-page').classList.remove('is-blurred');
   $('game-page').classList.add('hidden');
   $('home-page').classList.remove('hidden');
-  showResetBtn();
   updateHome();
 }
 
@@ -1564,13 +1562,7 @@ function showToast(msg) {
   setTimeout(() => t.remove(), 2200);
 }
 
-/* v2.3: Reset button visibility helpers (button is position:fixed on body, outside #app) */
-function showResetBtn() {
-  const btn = $('home-reset-btn'); if (btn) btn.classList.add('show');
-}
-function hideResetBtn() {
-  const btn = $('home-reset-btn'); if (btn) btn.classList.remove('show');
-}
+
 
 /* ----- v2.1: Share via Web Share API (mobile) or clipboard fallback (desktop) ----- */
 function shareGame() {
@@ -1611,29 +1603,7 @@ function toggleBGM() {
   }
 }
 
-/* ----- Reset ----- */
-function resetAll() {
-  if (!confirm(t('confirm_reset'))) return;
-  localStorage.removeItem(STORAGE_KEY);
-  Object.assign(S, {
-    mode:'classic', tubes:[], init:[], sel:-1, lv:0, moves:0, hist:[],
-    anim:false, won:false, opt:0, extraTube:null, combo:0,
-    items:{ hint:0, slot:0, shuffle:0 },
-    coins:0, bestLv:{ classic:0, steps:0 },
-    stars:{ classic:{}, steps:{} },
-    maxCombo:0, totalRescued:0,
-    animalsFound:{}, achievements:{},
-    rescuedBy:{},
-    rescueCount:{},
-    shuffleBonus:0,
-    dailyStreak:0, lastDaily:'',
-    pendingReward:0, newFoundThisRound:[],
-    totalWins:0, noItemWins:0, itemsUsedThisRound:false,
-    tutorialDone:{ classic:false, steps:false }, tutorialStep:-1,
-  });
-  updateHome(); renderAchievements(); renderCollection();
-  showToast('🧪 ' + t('toast_reset'));
-}
+
 
 /* ----- Pause animations when tab hidden (battery save) ----- */
 document.addEventListener('visibilitychange', () => {
@@ -1744,7 +1714,6 @@ function init() {
     }
   } catch(_) {}
   updateHome();
-  showResetBtn();  // v2.3: show reset button on home page
   renderAchievements();
   renderCollection();
   refreshAllAdButtons();  // v3: init ad button states
@@ -1769,7 +1738,6 @@ window.retryLevel     = retryLevel;
 window.closeNewAnimal = closeNewAnimal;
 window.navTo          = navTo;
 window.doReset        = doReset;
-window.resetAll       = resetAll;
 window.shareGame      = shareGame;
 window.toggleBGM      = toggleBGM;
 window.closeCollDetail = closeCollDetail;
