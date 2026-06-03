@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FDF9F2">
+<meta name="description" content="Sorting Shelter Pro — a cozy animal-rescue puzzle. Sort, stack, and free 50 cute critters!">
+<title>Sorting Shelter Pro</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=7">
+
+<link rel="manifest" href="manifest.json">
+<!-- Apple touch icon -->
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<!-- Favicon SVG -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
+
+<!-- i18n module (must load before game.js) -->
+<script type="module" src="js/i18n.js?v=3"></script>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ HOME ============ -->
+  <div class="page" id="home-page">
+    <div class="home-top-bar">
+      <div class="home-coin">
+        <span class="hc-icon">🪙</span>
+        <span id="home-coins">0</span>
+      </div>
+      <div class="home-actions">
+        <div class="home-action lang" id="lang-btn" onclick="setLang(window.LANG() === 'zh' ? 'en' : 'zh')" title="Switch Language">EN</div>
+        <div class="home-action bgm" id="bgm-btn" onclick="toggleBGM()" title="Music">🔇</div>
+        <div class="home-action" onclick="navTo('achv')" title="Achievements">
+          🏅<div class="ha-dot" id="achv-dot-h"></div>
+        </div>
+        <div class="home-action gift" id="daily-card" onclick="openDaily()" title="Daily reward">
+          🎁<div class="ha-dot" id="daily-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-hero">
+      <div class="home-title">Sorting Shelter</div>
+      <div class="home-subtitle" data-i18n="home_subtitle">Sort the critters, rescue them all!</div>
+      <div class="home-pets" aria-hidden="true">
+        <span>🦊</span><span>🐰</span><span>🐼</span><span>🦄</span><span>🐯</span>
+      </div>
+    </div>
+
+    <div class="home-stats">
+      <div class="stat-pill"><b id="home-collected">0/50</b><span data-i18n="home_collected">Collected</span></div>
+    </div>
+
+    <div class="mode-cards">
+      <div class="mode-card classic" onclick="startGame('classic')">
+        <div class="mode-card-inner">
+          <div class="mode-big-icon">🌿</div>
+          <div class="mode-text">
+            <div class="mode-name" data-i18n="mode_classic">Classic</div>
+            <div class="mode-lvl" id="home-lv-classic">Level 1</div>
+          </div>
+          <div class="mode-arrow">▶</div>
+        </div>
+      </div>
+      <div class="mode-card steps" onclick="startGame('steps')">
+        <div class="mode-card-inner">
+          <div class="mode-big-icon">🎯</div>
+          <div class="mode-text">
+            <div class="mode-name" data-i18n="mode_steps">Steps</div>
+            <div class="mode-lvl" id="home-lv-steps">Level 1</div>
+          </div>
+          <div class="mode-arrow">▶</div>
+        </div>
+      </div>
+    </div>
+    <div class="share-fab" onclick="shareGame()" data-i18n-title="home_share_title" title="Share with friends">
+      <svg viewBox="0 0 28 28" width="20" height="20" aria-hidden="true">
+        <path d="M3 14 L18 6 L12 14 L18 22 Z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M25 4 L14 24 L12 14 Z" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ============ GAME ============ -->
+  <div class="page hidden" id="game-page">
+    <div class="g-top">
+      <div class="g-back" onclick="backToMenu()">←</div>
+      <div class="g-title-area">
+        <div class="g-title" id="g-title">Classic</div>
+        <div class="g-stars" id="g-stars">☆☆☆</div>
+      </div>
+      <div class="g-badges">
+        <span class="gbdg lv" id="lv-bdg">Lvl 1</span>
+        <span class="gbdg mv" id="mv-bdg">0 moves</span>
+        <button class="g-shop-btn" onclick="openShop()" title="Shop">🏪</button>
+      </div>
+    </div>
+
+    <div id="prog-wrap"><div id="prog-trk"><div id="prog-fill"></div></div></div>
+    <!-- Steps-mode-only thin segmented bar (red/yellow/green by remaining steps) -->
+    <div id="step-bar-wrap" style="display:none">
+      <div id="step-bar-trk"><div id="step-bar-fill"></div></div>
+      <div id="step-bar-lbl">12 moves left</div>
+    </div>
+
+    <div id="tut-banner">
+      <div class="tut-guide">🐾</div>
+      <div class="tut-content">
+        <div class="tut-title" id="tut-title" data-i18n="tut_how_to_play">How to Play</div>
+        <div class="tut-desc" id="tut-desc" data-i18n="tut_step1_desc">Sort animals into matching groups of 4!</div>
+      </div>
+      <button class="tut-skip" onclick="skipTutorial()" data-i18n="tut_skip">Skip</button>
+    </div>
+
+    <div id="tube-area"></div>
+
+    <div id="item-bar">
+      <button class="itm" id="it-hint" onclick="useHint()"><span class="ic">💡</span><span data-i18n="item_hint">Hint</span><span class="cn" id="cn-hint">0</span></button>
+      <button class="itm" id="it-slot" onclick="useExtraSlot()"><span class="ic">📦</span><span data-i18n="item_slot">Extra Slot</span><span class="cn" id="cn-slot">0</span></button>
+      <button class="itm" id="it-shuffle" onclick="useShuffle()"><span class="ic">🔀</span><span data-i18n="item_shuffle">Shuffle</span><span class="cn" id="cn-shuffle">0</span></button>
+    </div>
+
+    <div id="ctrls">
+      <button class="cbtn und" id="btn-u" disabled>↩ Undo</button>
+      <button class="cbtn res" id="btn-r" onclick="doReset()">🔄 Reset</button>
+    </div>
+  </div>
+
+  <!-- ============ COLLECTION ============ -->
+  <div class="page hidden" id="coll-page">
+    <div class="coll-header">
+      <div class="coll-hero-icon">📖</div>
+      <div class="coll-title" data-i18n="coll_title">Collection</div>
+      <div class="coll-sub" data-i18n="coll_sub">Discover all the animal friends!</div>
+      <div class="coll-progress-ring">
+        <svg viewBox="0 0 100 100" class="coll-ring-svg">
+          <defs>
+            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#FF8C42"/>
+              <stop offset="50%" stop-color="#FF6B81"/>
+              <stop offset="100%" stop-color="#45B7D1"/>
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="50" r="42" class="coll-ring-bg"/>
+          <circle cx="50" cy="50" r="42" class="coll-ring-fill" id="coll-ring" stroke-dasharray="0 264"/>
+        </svg>
+        <div class="coll-ring-text"><span id="coll-found">0</span><small>/50</small></div>
+      </div>
+    </div>
+    <div id="coll-sections"></div>
+  </div>
+
+  <!-- ============ ACHIEVEMENTS ============ -->
+  <div class="page hidden" id="achv-page">
+    <div class="achv-header">
+      <div class="achv-title" data-i18n="achv_title">Achievements</div>
+      <div class="achv-stats"><span id="achv-count">0</span> / <span id="achv-total">20</span> <span data-i18n="achv_unlocked_fmt" data-i18n-vars='{"done":"0","total":"20"}'>unlocked</span></div>
+    </div>
+    <div id="achv-list"></div>
+  </div>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <div id="nav-bar">
+    <div class="nav-item active" data-page="home" onclick="navTo('home')"><span class="ni">🏠</span><span class="nl" data-i18n="nav_home">Home</span></div>
+    <div class="nav-item" data-page="coll" onclick="navTo('coll')"><span class="ni">📖</span><span class="nl" data-i18n="nav_collection">Collection</span></div>
+    <div class="nav-item" data-page="achv" onclick="navTo('achv')"><span class="ni">🏆</span><span class="nl" data-i18n="nav_achieve">Achieve</span><div class="nav-dot" id="achv-dot"></div></div>
+    <div class="nav-item" data-page="shop" onclick="navTo('shop')"><span class="ni">🏪</span><span class="nl" data-i18n="nav_shop">Shop</span></div>
+  </div>
+</div>
+
+<!-- Achievement unlock popup -->
+<div class="ovl" id="achv-o">
+  <div class="ovl-card achv-unlock-card">
+    <div class="achv-unlock-emoji" id="achv-pop-icon">🏆</div>
+    <div class="achv-unlock-badge" id="achv-pop-tier">🥉 Bronze</div>
+    <div class="achv-unlock-title" id="achv-pop-title" data-i18n="achv_pop_title">Achievement Unlocked!</div>
+    <div class="achv-unlock-desc" id="achv-pop-desc">—</div>
+    <div class="achv-unlock-reward">
+      <span class="achv-reward-label" data-i18n="achv_reward_label">Reward</span>
+      <span class="achv-reward-val" id="achv-pop-reward"></span>
+    </div>
+    <div class="ovl-btns">
+      <button class="ovl-btn pri" onclick="claimAchv()"><span data-i18n="achv_claim">Claim</span> 🎁</button>
+      <button class="ovl-btn ads" data-ad-placement="achvDouble" onclick="watchAd('achvDouble')">📺 <span data-i18n="achv_2x">2x Reward</span></button>
+    </div>
+    <button class="modal-close-btn" onclick="closeAchvPopup()" aria-label="Close">&times;</button>
+  </div>
+</div>
+
+<!-- New animal popup -->
+<div class="new-animal-popup" id="new-animal-popup">
+  <div class="new-animal-card">
+    <div class="na-header" id="na-header">🔓 New Discovery!</div>
+    <div class="na-list" id="na-list"></div>
+    <button class="ovl-btn pri" onclick="closeNewAnimal()" data-i18n="coll_awesome">Awesome!</button>
+  </div>
+</div>
+
+<!-- Win -->
+<div class="ovl" id="win-o">
+  <div class="ovl-card">
+    <div class="ovl-emoji">🎉</div>
+    <div class="ovl-title" data-i18n="win_title">All Rescued!</div>
+    <div class="ovl-sub" data-i18n="win_sub">The animals are back in the wild!</div>
+    <div class="ovl-stars" id="w-stars">⭐⭐⭐</div>
+    <div class="ovl-stats-wrap">
+      <span class="ovl-stat-pill" id="w-stat-moves"></span>
+      <span class="ovl-stat-pill" id="w-stat-lv"></span>
+    </div>
+    <div class="ovl-coin"><span>🪙</span><span id="w-coins">+44 coins</span></div>
+    <div class="ovl-btns">
+      <button class="ovl-btn pri"   onclick="nextLevel()">▶ <span data-i18n="win_next">Next Level</span></button>
+      <button class="ovl-btn ads" data-ad-placement="doubleReward" onclick="watchAd('doubleReward')">📺 <span data-i18n="win_2x_reward">2x Reward</span></button>
+      <button class="ovl-btn share" onclick="shareGame()">📤 <span data-i18n="win_share">Share with Friends</span></button>
+      <button class="ovl-btn home"  onclick="backToMenu()">🏠 <span data-i18n="win_home">Home</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Fail -->
+<div class="ovl" id="fail-o">
+  <div class="ovl-card fail">
+    <div class="ovl-emoji" id="f-emoji">⏰</div>
+    <div class="ovl-title" id="f-title" data-i18n="fail_title">Out of Moves!</div>
+    <div class="ovl-sub" id="f-sub" data-i18n="fail_sub">The animals are still waiting...</div>
+    <div class="ovl-btns">
+      <button class="ovl-btn danger" onclick="retryLevel()">🔄 <span data-i18n="fail_retry">Retry</span></button>
+      <button class="ovl-btn ads" data-ad-placement="revive" onclick="watchAd('revive')">📺 <span data-i18n="fail_revive">Watch Ad to Revive</span></button>
+      <button class="ovl-btn ghost"  onclick="backToMenu()">🏠 <span data-i18n="win_home">Home</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Shop -->
+<div class="ovl" id="shop-o">
+  <div class="ovl-card">
+    <div class="ovl-emoji">🏪</div>
+    <div class="ovl-title" data-i18n="shop_title">Shop</div>
+    <div class="shop-coin-header">
+      <span class="shop-coin-icon">🪙</span>
+      <span class="shop-coin-val" id="shop-coins">0</span>
+      <span style="font-size:12px;color:#B87333;font-weight:600" data-i18n="shop_coins">coins</span>
+    </div>
+    <div class="shop-items">
+      <div class="shop-card">
+        <div class="shop-icon-wrap"><span class="shop-icon">💡</span></div>
+        <div class="shop-card-info">
+          <div class="shop-card-name" data-i18n="shop_hint_name">Hint</div>
+          <div class="shop-card-desc" data-i18n="shop_hint_desc">Highlight a valid move</div>
+          <div class="shop-card-own">📦 <span data-i18n="shop_own">Own</span> <span id="so-hint">0</span></div>
+        </div>
+        <button class="shop-card-buy" onclick="buyItem('hint')">🪙 90</button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-icon-wrap"><span class="shop-icon">🔀</span></div>
+        <div class="shop-card-info">
+          <div class="shop-card-name" data-i18n="shop_shuffle_name">Shuffle</div>
+          <div class="shop-card-desc" data-i18n="shop_shuffle_desc">Restart this level <b>+5 extra steps</b> (Steps mode)</div>
+          <div class="shop-card-own">📦 <span data-i18n="shop_own">Own</span> <span id="so-shuffle">0</span></div>
+        </div>
+        <button class="shop-card-buy" onclick="buyItem('shuffle')">🪙 150</button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-icon-wrap"><span class="shop-icon">🧪</span></div>
+        <div class="shop-card-info">
+          <div class="shop-card-name" data-i18n="shop_slot_name">Extra Slot</div>
+          <div class="shop-card-desc" data-i18n="shop_slot_desc">Add a small spare tube (+2 cells) to park animals</div>
+          <div class="shop-card-own">📦 <span data-i18n="shop_own">Own</span> <span id="so-slot">0</span></div>
+        </div>
+        <button class="shop-card-buy" onclick="buyItem('slot')">🪙 200</button>
+      </div>
+    </div>
+    <button class="modal-close-btn" onclick="closeShop()" aria-label="Close">&times;</button>
+  </div>
+</div>
+
+<!-- Daily -->
+<div class="ovl" id="daily-o">
+  <div class="ovl-card">
+    <div class="ovl-emoji">🎁</div>
+    <div class="ovl-title" data-i18n="daily_title">Daily Reward</div>
+    <div class="daily-streak-bar">
+      <span class="ds-fire">🔥</span>
+      <span class="ds-txt" id="daily-streak-label">Day 1 Streak</span>
+    </div>
+    <!-- Loyalty Tier banner — shows when dailyStreak >= 7 -->
+    <div id="loyalty-banner" style="display:none"></div>
+    <div class="daily-grid" id="daily-grid"></div>
+    <div class="ovl-btns">
+      <button class="ovl-btn pri"   id="daily-claim-btn" onclick="doDailyClaim()"><span data-i18n="daily_claim">Claim</span> 🎁</button>
+      <button class="ovl-btn ads" data-ad-placement="dailyDouble" onclick="watchAd('dailyDouble')">📺 <span data-i18n="daily_2x">2x Claim</span></button>
+    </div>
+    <button class="modal-close-btn" onclick="closeDaily()" aria-label="Close">&times;</button>
+  </div>
+</div>
+
+<!-- Collection detail (big card on tap) -->
+<div class="ovl" id="coll-detail-o">
+  <div class="ovl-card coll-detail-card">
+    <div class="cd-emoji" id="cd-emoji">🐾</div>
+    <div class="cd-name" id="cd-name">—</div>
+    <div class="cd-region" id="cd-region">—</div>
+    <div class="cd-desc" id="cd-desc">—</div>
+    <div class="cd-sound" id="cd-sound">—</div>
+    <div class="cd-stat">
+      <span class="cd-stat-icon">🐾</span>
+      <span class="cd-stat-val"><b id="cd-rescued">0</b> <span data-i18n="coll_rescued">rescued total</span></span>
+    </div>
+    <button class="modal-close-btn" onclick="closeCollDetail()" aria-label="Close">&times;</button>
+  </div>
+</div>
+
+<!-- Coin history detail -->
+<div class="ovl" id="coin-o">
+  <div class="ovl-card coin-detail-card">
+    <div class="coin-d-header">
+      <div class="coin-d-emoji">💰</div>
+      <div class="coin-d-title" data-i18n="coin_title">Coin History</div>
+      <div class="coin-d-balance"><span id="cd-balance">0</span> 🪙</div>
+    </div>
+    <div class="coin-d-summary" id="coin-d-summary"></div>
+    <div class="coin-d-list" id="coin-d-list"></div>
+    <button class="modal-close-btn" onclick="closeCoinDetail()" aria-label="Close">&times;</button>
+  </div>
+</div>
+
+<!-- Reset button — outside #app as direct child of body with position:fixed to escape all stacking-context fights -->
+<div class="home-reset" id="home-reset-btn" onclick="resetAll()" title="Reset all progress">↺</div>
+
+<!-- Register Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(() => {}).catch(() => {});
+  });
+}
+</script>
+
+<script type="module" src="js/game.js?v=23"></script>
+</body>
+</html>
