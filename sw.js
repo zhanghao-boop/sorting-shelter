@@ -4,7 +4,7 @@
 // Handles cache-busting ?v=N query params via ignoreSearch
 // ============================================================
 
-const CACHE_NAME = 'shelter-pro-v3';
+const CACHE_NAME = 'shelter-pro-v4';
 
 // Base paths to pre-cache (without version queries)
 const STATIC_ASSETS = [
