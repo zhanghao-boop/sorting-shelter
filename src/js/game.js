@@ -17,17 +17,17 @@ import {
   ANIMALS, REGIONS, TUTORIAL, LEVELS_C, LEVELS_S, PRICES,
   ACHIEVEMENTS, ACHV_CATS, TUTORIAL_HINTS, DAILY_REWARDS, CAP, TOTAL,
   REGION_I18N
-} from './data.js';
+} from './data.js?v=24';
 import {
   itemIcons, medalSvg, animalSticker, animalCell,
   iconCoin, iconBgm, iconGift, iconTrophy, iconBook, iconHome, iconShop,
   iconBack, iconUndo, iconReset, iconStar, iconPaw,
   iconModeClassic, iconModeSteps
-} from './icons.js';
+} from './icons.js?v=24';
 import { showRewardedAd, refreshAllAdButtons, getAdRemaining,
          initCrazyGames, showInterstitialAd, loadingStarted, loadingStopped,
-         gameplayStart, gameplayStop, gameplayHappytime } from './ads.js';
-import { t, LANG, setLang, applyStaticI18n, raw } from './i18n.js';
+         gameplayStart, gameplayStop, gameplayHappytime } from './ads.js?v=24';
+import { t, LANG, setLang, applyStaticI18n, raw } from './i18n.js?v=24';
 
 /* ----- Tiny sound engine (lazy WebAudio, fails silently) ----- */
 const Snd = {
