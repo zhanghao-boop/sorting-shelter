@@ -24,7 +24,9 @@ import {
   iconBack, iconUndo, iconReset, iconStar, iconPaw,
   iconModeClassic, iconModeSteps
 } from './icons.js';
-import { showRewardedAd, refreshAllAdButtons, getAdRemaining } from './ads.js';
+import { showRewardedAd, refreshAllAdButtons, getAdRemaining,
+         initCrazyGames, showInterstitialAd,
+         gameplayStart, gameplayStop, gameplayHappytime } from './ads.js';
 import { t, LANG, setLang, applyStaticI18n, raw } from './i18n.js';
 
 /* ----- Tiny sound engine (lazy WebAudio, fails silently) ----- */
@@ -294,7 +296,9 @@ function calcCoinReward(lv, mode, stars) {
   const data = (mode === 'classic' ? LEVELS_C : LEVELS_S)[lv];
   if (!data) return 20;
   const opt = data.opt || 5;
-  const numTypes = new Set(data.tubes.flat()).size;
+  // Safe flatten — handles missing tubes or non-array items gracefully
+  const flatTubes = (data.tubes || []).reduce((a, b) => a.concat(Array.isArray(b) ? b : []), []);
+  const numTypes = new Set(flatTubes).size;
   // Difficulty score: opt contributes most, numTypes adds a bit
   const diffScore = Math.min(10, Math.floor(opt / 3) + Math.max(0, numTypes - 3));
   const starBonus = stars === 3 ? 5 : (stars === 2 ? 2 : 0);
@@ -721,6 +725,8 @@ function showWin() {
       reward = Math.max(3, Math.round(baseReward * 0.12));
     }
   }
+  // Safety net: reward should never be 0 or invalid
+  if (!Number.isFinite(reward) || reward < 1) reward = 20;
   S.pendingReward = reward;
   S.coins += reward;
   // Track level win reward
@@ -741,6 +747,10 @@ function showWin() {
     if (t < 1) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
+  // Fallback: ensure the final reward is shown even if rAF stalls
+  setTimeout(() => {
+    if (winCoinEl) winCoinEl.textContent = `+${reward} ${t('win_coins')}`;
+  }, dur + 100);
   if (!isTutorial) {
     S.totalWins++;
     if (!S.itemsUsedThisRound) S.noItemWins++;
@@ -763,11 +773,13 @@ function showWin() {
       } catch(e) {
         console.error('showNewAnimal error:', e);
         $('win-o').classList.add('show'); refreshAllAdButtons();
+        gameplayHappytime();  // CrazyGames: happy moment event
       }
     }, 400);
   } else {
     $('win-o').classList.add('show');
     refreshAllAdButtons();
+    gameplayHappytime();  // CrazyGames: happy moment event
     SFX.win(); haptic('win'); spawnConfetti();
   }
 }
@@ -1176,6 +1188,7 @@ function doReset() {
 }
 function nextLevel() {
   hideWin();
+  maybeShowInterstitial();  // fire-and-forget interstitial between levels
   // Clear unclaimed reward — player chose to skip ad
   if (S.pendingReward > 0) {
     S.pendingReward = 0;
@@ -1292,10 +1305,13 @@ function startGame(mode) {
   $('g-title').textContent = titles[mode];
   $('home-page').classList.add('hidden');
   $('game-page').classList.remove('hidden');
+  gameplayStart();  // CrazyGames: notify gameplay start
   if (!S.tutorialDone.classic && !S.tutorialDone.steps) loadTutorial(); else loadLevel(S.lv);
 }
 
 function backToMenu() {
+  gameplayStop();  // CrazyGames: notify gameplay stopped
+  maybeShowInterstitial();  // fire-and-forget interstitial
   hideWin(); hideFail(); _newAnimalCb = null;
   $('new-animal-popup').classList.remove('show');
   S.won = false; S.combo = 0; S.tutorialStep = -1;
@@ -1304,6 +1320,15 @@ function backToMenu() {
   $('game-page').classList.add('hidden');
   $('home-page').classList.remove('hidden');
   updateHome();
+}
+
+/* ----- Interstitial ad throttle (every 3rd screen transition) ----- */
+let _interstitialCounter = 0;
+async function maybeShowInterstitial() {
+  _interstitialCounter++;
+  if (_interstitialCounter % 3 === 0) {
+    await showInterstitialAd();
+  }
 }
 
 /* ----- Home / Collection / Achievements ----- */
@@ -1674,6 +1699,7 @@ function installStaticIcons() {
 }
 
 function init() {
+  initCrazyGames(); // auto-detect CrazyGames environment
   $('btn-u').addEventListener('pointerdown', e => { e.preventDefault(); doUndo(); });
   $('btn-r').addEventListener('pointerdown', e => { e.preventDefault(); doReset(); });
   document.addEventListener('keydown', e => {

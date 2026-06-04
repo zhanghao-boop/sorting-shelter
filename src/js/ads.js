@@ -1,13 +1,14 @@
 /* ==========================================================================
-   AdManager — modular ad layer for future monetization
-   Supports: mock (MVP), 微信小游戏激励视频, 穿山甲 H5, 优量汇 H5
+   AdManager — modular ad layer for monetization
+   Supports: mock (dev), crazygames (auto-detect), wechat, pangle, ylh
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
    1. CONFIG — switch provider here when you're ready for real ads
    -------------------------------------------------------------------------- */
 export const AD_CONFIG = {
-  // "mock" | "wechat" | "pangle" | "ylh"
+  // "mock" | "crazygames" | "wechat" | "pangle" | "ylh"
+  // NOTE: when CrazyGames SDK is detected, provider auto-switches to "crazygames"
   provider: 'mock',
 
   // Per-placement daily limits & cooldown (seconds between ads)
@@ -41,6 +42,8 @@ export const AD_CONFIG = {
     achvDouble:   'xxxxxxxx',
     spinWheel:    'xxxxxxxx',
   },
+  // CrazyGames — no ad-unit IDs needed; placement maps to ad type internally
+  crazygames: {},
 };
 
 /* --------------------------------------------------------------------------
@@ -176,6 +179,11 @@ export async function showRewardedAd(placement, onSuccess, onFail, onClose) {
       case 'mock':
       default:
         await _mockRewardedAd(placement, onSuccess, onFail, onClose);
+        break;
+
+      /* ----- CrazyGames rewarded video ----- */
+      case 'crazygames':
+        await _crazygamesRewardedAd(placement, onSuccess, onFail, onClose);
         break;
     }
 
@@ -371,4 +379,81 @@ async function _ylhRewardedAd(placement, onSuccess, onFail, onClose) {
 
   // Fallback
   throw new Error('YLH not yet integrated. Set provider to "mock" or integrate SDK.');
+}
+
+
+/* 4e. CrazyGames — full rewarded + interstitial support
+   Docs: https://developer.crazygames.com/sdk/html5
+   Auto-detects when running inside CrazyGames iframe. */
+let _cgReady = false;
+
+export function initCrazyGames() {
+  if (typeof CrazyGames === 'undefined' || !CrazyGames.SDK) {
+    return; // Not running on CrazyGames — silently skip
+  }
+  try {
+    CrazyGames.SDK.init();
+    _cgReady = true;
+    AD_CONFIG.provider = 'crazygames';
+    console.log('[AdManager] CrazyGames SDK initialized');
+  } catch (err) {
+    console.warn('[AdManager] CrazyGames init failed:', err);
+  }
+}
+
+function _hasCrazyGames() {
+  return _cgReady && typeof CrazyGames !== 'undefined' && CrazyGames.SDK && CrazyGames.SDK.ad;
+}
+
+async function _crazygamesRewardedAd(placement, onSuccess, onFail, onClose) {
+  if (!_hasCrazyGames()) {
+    throw new Error('CrazyGames SDK not available');
+  }
+  return new Promise((resolve, reject) => {
+    CrazyGames.SDK.ad.requestAd('rewarded', {
+      adStarted: () => {},
+      adFinished: () => {
+        if (onClose) onClose();
+        if (onSuccess) onSuccess();
+        resolve();
+      },
+      adError: (err) => {
+        reject(err || 'ad_error');
+      }
+    });
+  });
+}
+
+/**
+ * Show interstitial / midgame ad.
+ * Safe to call anywhere — silently no-ops outside CrazyGames.
+ * @param {Function} [onDone] — called when ad finishes or errors
+ */
+export async function showInterstitialAd(onDone) {
+  if (!_hasCrazyGames()) {
+    if (onDone) onDone();
+    return;
+  }
+  CrazyGames.SDK.ad.requestAd('midgame', {
+    adStarted: () => {},
+    adFinished: () => { if (onDone) onDone(); },
+    adError: ()   => { if (onDone) onDone(); }
+  });
+}
+
+/**
+ * Notify CrazyGames that gameplay started / stopped.
+ * Safe to call anywhere — silently no-ops outside CrazyGames.
+ */
+export function gameplayStart() {
+  if (!_hasCrazyGames()) return;
+  try { CrazyGames.SDK.game.gameplayStart(); } catch (_) {}
+}
+export function gameplayStop() {
+  if (!_hasCrazyGames()) return;
+  try { CrazyGames.SDK.game.gameplayStop(); } catch (_) {}
+}
+export function gameplayHappytime() {
+  if (!_hasCrazyGames()) return;
+  try { CrazyGames.SDK.game.happytime(); } catch (_) {}
 }
