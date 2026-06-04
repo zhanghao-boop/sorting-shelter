@@ -25,7 +25,7 @@ import {
   iconModeClassic, iconModeSteps
 } from './icons.js';
 import { showRewardedAd, refreshAllAdButtons, getAdRemaining,
-         initCrazyGames, showInterstitialAd,
+         initCrazyGames, showInterstitialAd, loadingStarted, loadingStopped,
          gameplayStart, gameplayStop, gameplayHappytime } from './ads.js';
 import { t, LANG, setLang, applyStaticI18n, raw } from './i18n.js';
 
@@ -768,18 +768,19 @@ function showWin() {
         showNewAnimal(newAnimals, () => {
           $('win-o').classList.add('show');
           refreshAllAdButtons();
+          if (ps === 0) gameplayHappytime(); // CrazyGames: first clear only
           SFX.win(); haptic('win'); spawnConfetti();
         });
       } catch(e) {
         console.error('showNewAnimal error:', e);
         $('win-o').classList.add('show'); refreshAllAdButtons();
-        gameplayHappytime();  // CrazyGames: happy moment event
+        if (ps === 0) gameplayHappytime(); // CrazyGames: first clear only
       }
     }, 400);
   } else {
     $('win-o').classList.add('show');
     refreshAllAdButtons();
-    gameplayHappytime();  // CrazyGames: happy moment event
+    if (ps === 0) gameplayHappytime(); // CrazyGames: first clear only
     SFX.win(); haptic('win'); spawnConfetti();
   }
 }
@@ -1681,7 +1682,7 @@ function installStaticIcons() {
 
   // Shop static cards (3 items)
   const shopCards = document.querySelectorAll('#shop-o .shop-card');
-  const shopIcons = [itemIcons.hint, itemIcons.slot, itemIcons.shuffle];
+  const shopIcons = [itemIcons.hint, itemIcons.shuffle, itemIcons.slot];
   shopCards.forEach((card, i) => {
     if (!shopIcons[i]) return;
     const w = card.querySelector('.shop-icon');
@@ -1700,6 +1701,7 @@ function installStaticIcons() {
 
 function init() {
   initCrazyGames(); // auto-detect CrazyGames environment
+  loadingStarted(); // CrazyGames: loading begin
   $('btn-u').addEventListener('pointerdown', e => { e.preventDefault(); doUndo(); });
   $('btn-r').addEventListener('pointerdown', e => { e.preventDefault(); doReset(); });
   document.addEventListener('keydown', e => {
@@ -1743,6 +1745,7 @@ function init() {
   renderAchievements();
   renderCollection();
   refreshAllAdButtons();  // v3: init ad button states
+  loadingStopped(); // CrazyGames: loading complete
 }
 
 /* ----- Expose to inline onclick handlers ----- */

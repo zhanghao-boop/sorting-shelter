@@ -388,11 +388,11 @@ async function _ylhRewardedAd(placement, onSuccess, onFail, onClose) {
 let _cgReady = false;
 
 export function initCrazyGames() {
-  if (typeof CrazyGames === 'undefined' || !CrazyGames.SDK) {
+  if (typeof window.CrazyGames === 'undefined' || !window.CrazyGames.SDK) {
     return; // Not running on CrazyGames — silently skip
   }
   try {
-    CrazyGames.SDK.init();
+    window.CrazyGames.SDK.init();
     _cgReady = true;
     AD_CONFIG.provider = 'crazygames';
     console.log('[AdManager] CrazyGames SDK initialized');
@@ -401,8 +401,18 @@ export function initCrazyGames() {
   }
 }
 
+export function loadingStarted() {
+  if (!_hasCrazyGames()) return;
+  try { window.CrazyGames.SDK.game.loadingStarted(); } catch (_) {}
+}
+
+export function loadingStopped() {
+  if (!_hasCrazyGames()) return;
+  try { window.CrazyGames.SDK.game.loadingStopped(); } catch (_) {}
+}
+
 function _hasCrazyGames() {
-  return _cgReady && typeof CrazyGames !== 'undefined' && CrazyGames.SDK && CrazyGames.SDK.ad;
+  return _cgReady && typeof window.CrazyGames !== 'undefined' && window.CrazyGames.SDK && window.CrazyGames.SDK.ad;
 }
 
 async function _crazygamesRewardedAd(placement, onSuccess, onFail, onClose) {
@@ -410,7 +420,7 @@ async function _crazygamesRewardedAd(placement, onSuccess, onFail, onClose) {
     throw new Error('CrazyGames SDK not available');
   }
   return new Promise((resolve, reject) => {
-    CrazyGames.SDK.ad.requestAd('rewarded', {
+    window.CrazyGames.SDK.ad.requestAd('rewarded', {
       adStarted: () => {},
       adFinished: () => {
         if (onClose) onClose();
@@ -434,7 +444,7 @@ export async function showInterstitialAd(onDone) {
     if (onDone) onDone();
     return;
   }
-  CrazyGames.SDK.ad.requestAd('midgame', {
+  window.CrazyGames.SDK.ad.requestAd('midgame', {
     adStarted: () => {},
     adFinished: () => { if (onDone) onDone(); },
     adError: ()   => { if (onDone) onDone(); }
@@ -447,13 +457,13 @@ export async function showInterstitialAd(onDone) {
  */
 export function gameplayStart() {
   if (!_hasCrazyGames()) return;
-  try { CrazyGames.SDK.game.gameplayStart(); } catch (_) {}
+  try { window.CrazyGames.SDK.game.gameplayStart(); } catch (_) {}
 }
 export function gameplayStop() {
   if (!_hasCrazyGames()) return;
-  try { CrazyGames.SDK.game.gameplayStop(); } catch (_) {}
+  try { window.CrazyGames.SDK.game.gameplayStop(); } catch (_) {}
 }
 export function gameplayHappytime() {
   if (!_hasCrazyGames()) return;
-  try { CrazyGames.SDK.game.happytime(); } catch (_) {}
+  try { window.CrazyGames.SDK.game.happytime(); } catch (_) {}
 }
