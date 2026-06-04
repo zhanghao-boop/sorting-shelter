@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Sync src/ to gh-pages root
+        run: |
+          cd gh-pages
+          rm -rf css js icons index.html cover.html manifest.json sw.js
+          cp ../main/src/index.html index.html
+          cp ../main/src/cover.html cover.html 2>/dev/null || true
+          cp ../main/src/manifest.json manifest.json 2>/dev/null || true
+          cp ../main/src/sw.js sw.js 2>/dev/null || true
+          cp -r ../main/src/css css
+          cp -r ../main/src/js js
+          cp -r ../main/src/icons icons
+
+      - name: Commit & Push gh-pages
+        run: |
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to deploy"
+          else
+            git commit -m "auto: sync from main [${GITHUB_SHA::7}]"
+            git push origin gh-pages
+          fi
