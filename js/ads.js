@@ -389,10 +389,13 @@ let _cgReady = false;
 
 export function initCrazyGames() {
   if (typeof window.CrazyGames === 'undefined' || !window.CrazyGames.SDK) {
-    return; // Not running on CrazyGames — silently skip
+    return; // Not running on CrazyGames — silently skip (SDK script not loaded)
   }
   try {
-    window.CrazyGames.SDK.init();
+    // SDK.init() is async and returns a Promise. If we don't catch rejection
+    // it becomes an unhandled rejection → "Uncaught Object" error in console.
+    // .catch() silences the expected rejection outside the CG iframe.
+    window.CrazyGames.SDK.init().catch(() => {});
     _cgReady = true;
     AD_CONFIG.provider = 'crazygames';
     console.log('[AdManager] CrazyGames SDK initialized');
